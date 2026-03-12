@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, createContext, useContext } from "react";
 
 // ─── API Layer ─────────────────────────────────────────────
-const BASE_URL = 'http://localhost:5000/api';
+const BASE_URL = 'https://edupredictor-api.onrender.com/api';
 const getToken = () => localStorage.getItem('edu_token');
 const apiHeaders = (extra = {}) => ({
   'Content-Type': 'application/json',
