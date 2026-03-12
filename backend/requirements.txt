@@ -1,0 +1,6 @@
+flask
+pyjwt
+scikit-learn
+pandas
+openpyxl
+gunicorn
