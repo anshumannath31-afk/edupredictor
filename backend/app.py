@@ -9,6 +9,7 @@ from routes.auth import auth_bp, hash_password
 from routes.predictions import predict_bp
 from routes.upload import upload_bp
 from routes.analytics import analytics_bp
+from routes.semesters import semester_bp
 import json
 
 def create_app():
@@ -20,6 +21,7 @@ def create_app():
     app.register_blueprint(predict_bp, url_prefix='/api')
     app.register_blueprint(upload_bp, url_prefix='/api')
     app.register_blueprint(analytics_bp, url_prefix='/api')
+    app.register_blueprint(semester_bp, url_prefix='/api')
 
 
     @app.after_request
@@ -38,6 +40,8 @@ def create_app():
             'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS'
         })
     init_db()
+    from extensions import init_semester_table
+    init_semester_table()
     seed_data()
     train_ml_model()
 
@@ -96,6 +100,33 @@ def seed_data():
         conn.execute("INSERT INTO predictions (user_id,record_id,prediction,risk_level,confidence,weak_subjects,recommendations) VALUES (?,?,?,?,?,?,?)",
             (user['id'],cur.lastrowid,res['prediction'],res['risk_level'],res['confidence'],json.dumps(res['weak_subjects']),json.dumps(res['recommendations'])))
         conn.commit()
+
+        # Seed past semester results for demo students
+        sem_data = {
+            'priya@demo.com': [
+                (1,'Sem 1',72,75,80,85,78,7.8,88,0),(2,'Sem 2',74,78,82,87,80,8.0,90,0),
+            ],
+            'rahul@demo.com': [
+                (1,'Sem 1',55,48,60,65,50,5.5,70,2),(2,'Sem 2',48,44,55,60,46,5.0,65,3),
+            ],
+            'ananya@demo.com': [
+                (1,'Sem 1',60,65,70,75,62,6.8,78,1),(2,'Sem 2',58,66,71,77,63,6.9,76,1),
+            ],
+            'vikram@demo.com': [
+                (1,'Sem 1',85,80,84,82,88,8.8,92,0),(2,'Sem 2',87,82,86,84,90,9.0,93,0),
+            ],
+            'shreya@demo.com': [
+                (1,'Sem 1',45,40,50,55,42,4.5,65,3),(2,'Sem 2',40,38,48,52,40,4.2,62,4),
+            ],
+        }
+        if email in sem_data:
+            for sem_no,sem_name,mm,pm,cm,em,csm,cgpa,att,bl in sem_data[email]:
+                conn.execute('''INSERT INTO semester_results
+                    (user_id,semester_no,semester_name,math_marks,physics_marks,chemistry_marks,
+                     english_marks,cs_marks,cgpa,attendance,backlogs)
+                    VALUES (?,?,?,?,?,?,?,?,?,?,?)''',
+                    (user['id'],sem_no,sem_name,mm,pm,cm,em,csm,cgpa,att,bl))
+            conn.commit()
 
     # Resources
     if conn.execute("SELECT COUNT(*) FROM resources").fetchone()[0] == 0:

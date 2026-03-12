@@ -135,6 +135,9 @@ const Sidebar = ({ page, setPage, user, onLogout }) => {
   const studentNav = [
     { id: "dashboard", icon: "⊞", label: "Dashboard" },
     { id: "data-entry", icon: "✏️", label: "Academic Data" },
+    { id: "semesters", icon: "📅", label: "Semester History" },
+    { id: "youtube", icon: "🎬", label: "YouTube Playlists" },
+    { id: "schedule", icon: "🗓", label: "Study Schedule" },
     { id: "resources", icon: "📚", label: "Resources" },
     { id: "history", icon: "📋", label: "History" },
   ];
@@ -464,6 +467,37 @@ const StudentDashboard = () => {
           </div>
         </Card>
       )}
+
+      {/* Quick Actions for New Features */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }}>
+        {[
+          { icon: "📅", title: "Semester History", desc: "Track your results across all semesters and see AI trend analysis", page: "semesters", bg: "linear-gradient(135deg,#1E3A8A,#2563EB)", badge: "New" },
+          { icon: "🎬", title: "YouTube Playlists", desc: "Watch curated video playlists for your weak subjects", page: "youtube", bg: "linear-gradient(135deg,#7f1d1d,#DC2626)", badge: "YouTube" },
+          { icon: "🗓️", title: "Study Schedule", desc: "Get an AI-generated weekly study plan based on your weak areas", page: "schedule", bg: "linear-gradient(135deg,#4C1D95,#7C3AED)", badge: "AI" },
+        ].map(item => (
+          <DashboardQuickCard key={item.page} {...item} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Quick action card for dashboard (needs setPage from parent — uses window event)
+const DashboardQuickCard = ({ icon, title, desc, page, bg, badge }) => {
+  const [hover, setHover] = useState(false);
+  return (
+    <div
+      onClick={() => window.dispatchEvent(new CustomEvent("edunav", { detail: page }))}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{ background: bg, borderRadius: 16, padding: "20px", cursor: "pointer", transition: "all 0.25s", transform: hover ? "translateY(-4px)" : "none", boxShadow: hover ? "0 12px 30px rgba(0,0,0,0.2)" : "0 4px 12px rgba(0,0,0,0.1)" }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+        <span style={{ fontSize: 32 }}>{icon}</span>
+        <span style={{ background: "rgba(255,255,255,0.2)", color: "#fff", fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 20 }}>{badge}</span>
+      </div>
+      <div style={{ fontFamily: "'Sora',sans-serif", fontWeight: 700, fontSize: 15, color: "#fff", marginBottom: 6 }}>{title}</div>
+      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", lineHeight: 1.5 }}>{desc}</div>
     </div>
   );
 };
@@ -1022,12 +1056,478 @@ const AnalyticsPage = () => {
   );
 };
 
+// ─── YouTube & Semester Data ───────────────────────────────
+const YOUTUBE_PLAYLISTS = {
+  Mathematics: [
+    { title: "Calculus Full Course", channel: "Professor Leonard", duration: "20+ hrs", level: "Beginner→Advanced", thumbnail: "https://img.youtube.com/vi/WUvTyaaNkzM/mqdefault.jpg", url: "https://www.youtube.com/watch?v=WUvTyaaNkzM&list=PLF797E961509B4EB5", topic: "Calculus", views: "5.2M" },
+    { title: "Linear Algebra – Essence", channel: "3Blue1Brown", duration: "3h 45m", level: "Intermediate", thumbnail: "https://img.youtube.com/vi/fNk_zzaMoSs/mqdefault.jpg", url: "https://www.youtube.com/watch?v=fNk_zzaMoSs&list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab", topic: "Linear Algebra", views: "8.1M" },
+    { title: "Algebra Basics", channel: "Khan Academy", duration: "10+ hrs", level: "Beginner", thumbnail: "https://img.youtube.com/vi/NybHckSEQBI/mqdefault.jpg", url: "https://www.youtube.com/watch?v=NybHckSEQBI", topic: "Algebra", views: "12M" },
+    { title: "Trigonometry Full Course", channel: "Organic Chemistry Tutor", duration: "6h", level: "Beginner", thumbnail: "https://img.youtube.com/vi/PUB0TaZ7bhA/mqdefault.jpg", url: "https://www.youtube.com/watch?v=PUB0TaZ7bhA", topic: "Trigonometry", views: "3.4M" },
+    { title: "Statistics & Probability", channel: "StatQuest", duration: "8+ hrs", level: "Intermediate", thumbnail: "https://img.youtube.com/vi/qBigTkBLU6g/mqdefault.jpg", url: "https://www.youtube.com/watch?v=qBigTkBLU6g", topic: "Statistics", views: "2.8M" },
+    { title: "Differential Equations", channel: "MIT OpenCourseWare", duration: "25+ hrs", level: "Advanced", thumbnail: "https://img.youtube.com/vi/ZvL88xqYSak/mqdefault.jpg", url: "https://www.youtube.com/watch?v=ZvL88xqYSak", topic: "Diff Equations", views: "1.5M" },
+  ],
+  Physics: [
+    { title: "Physics Class 11 & 12", channel: "Physics Wallah", duration: "40+ hrs", level: "Beginner→Advanced", thumbnail: "https://img.youtube.com/vi/6TV6LmLMqm8/mqdefault.jpg", url: "https://www.youtube.com/watch?v=6TV6LmLMqm8", topic: "Full Course", views: "15M" },
+    { title: "Classical Mechanics", channel: "MIT OpenCourseWare", duration: "30+ hrs", level: "Advanced", thumbnail: "https://img.youtube.com/vi/ApUFtLCrU90/mqdefault.jpg", url: "https://www.youtube.com/watch?v=ApUFtLCrU90", topic: "Mechanics", views: "2.1M" },
+    { title: "Electromagnetism Full", channel: "Neso Academy", duration: "12+ hrs", level: "Intermediate", thumbnail: "https://img.youtube.com/vi/rFsV-SFnGaE/mqdefault.jpg", url: "https://www.youtube.com/watch?v=rFsV-SFnGaE", topic: "Electromagnetics", views: "4.5M" },
+    { title: "Quantum Physics Basics", channel: "Domain of Science", duration: "2h", level: "Beginner", thumbnail: "https://img.youtube.com/vi/p7bzE1E5PMY/mqdefault.jpg", url: "https://www.youtube.com/watch?v=p7bzE1E5PMY", topic: "Quantum", views: "6.2M" },
+    { title: "Thermodynamics", channel: "Organic Chemistry Tutor", duration: "5h", level: "Intermediate", thumbnail: "https://img.youtube.com/vi/7DjSBMX-FSQ/mqdefault.jpg", url: "https://www.youtube.com/watch?v=7DjSBMX-FSQ", topic: "Thermodynamics", views: "2.9M" },
+  ],
+  Chemistry: [
+    { title: "Organic Chemistry Full", channel: "Khan Academy", duration: "15+ hrs", level: "Beginner→Advanced", thumbnail: "https://img.youtube.com/vi/bSMx0NS0XfY/mqdefault.jpg", url: "https://www.youtube.com/watch?v=bSMx0NS0XfY", topic: "Organic", views: "8.7M" },
+    { title: "Chemistry Class 12", channel: "Vedantu", duration: "30+ hrs", level: "Intermediate", thumbnail: "https://img.youtube.com/vi/1MOabDGKmKU/mqdefault.jpg", url: "https://www.youtube.com/watch?v=1MOabDGKmKU", topic: "Full Syllabus", views: "5.3M" },
+    { title: "Chemical Bonding", channel: "BYJU's", duration: "4h", level: "Beginner", thumbnail: "https://img.youtube.com/vi/CGA8sRwqIFg/mqdefault.jpg", url: "https://www.youtube.com/watch?v=CGA8sRwqIFg", topic: "Bonding", views: "4.2M" },
+    { title: "Electrochemistry", channel: "Organic Chemistry Tutor", duration: "3h", level: "Intermediate", thumbnail: "https://img.youtube.com/vi/JD3F9yLBXvA/mqdefault.jpg", url: "https://www.youtube.com/watch?v=JD3F9yLBXvA", topic: "Electrochemistry", views: "1.8M" },
+    { title: "Inorganic Chemistry", channel: "Unacademy JEE", duration: "20+ hrs", level: "Intermediate", thumbnail: "https://img.youtube.com/vi/HiNuFyHGtOk/mqdefault.jpg", url: "https://www.youtube.com/watch?v=HiNuFyHGtOk", topic: "Inorganic", views: "3.1M" },
+  ],
+  English: [
+    { title: "English Grammar Full", channel: "Learn English with Emma", duration: "10+ hrs", level: "Beginner", thumbnail: "https://img.youtube.com/vi/6Oq0uqEMvmU/mqdefault.jpg", url: "https://www.youtube.com/watch?v=6Oq0uqEMvmU", topic: "Grammar", views: "9.4M" },
+    { title: "Spoken English Full Course", channel: "Spoken English Guru", duration: "15+ hrs", level: "Beginner", thumbnail: "https://img.youtube.com/vi/VX9m_8KDXCU/mqdefault.jpg", url: "https://www.youtube.com/watch?v=VX9m_8KDXCU", topic: "Speaking", views: "18M" },
+    { title: "Academic Writing Skills", channel: "Oxford Online English", duration: "5h", level: "Intermediate", thumbnail: "https://img.youtube.com/vi/o-49gNsGOY4/mqdefault.jpg", url: "https://www.youtube.com/watch?v=o-49gNsGOY4", topic: "Writing", views: "2.1M" },
+    { title: "Vocabulary Building", channel: "mmmEnglish", duration: "4h", level: "Beginner→Inter", thumbnail: "https://img.youtube.com/vi/y7sOIGBeSaI/mqdefault.jpg", url: "https://www.youtube.com/watch?v=y7sOIGBeSaI", topic: "Vocabulary", views: "3.2M" },
+  ],
+  "Computer Science": [
+    { title: "Data Structures & Algorithms", channel: "Abdul Bari", duration: "25+ hrs", level: "Beginner→Advanced", thumbnail: "https://img.youtube.com/vi/0IAPZzGSbME/mqdefault.jpg", url: "https://www.youtube.com/watch?v=0IAPZzGSbME&list=PLDN4rrl48XKpZkf03iYFl-O29szjTrs_O", topic: "DSA", views: "11M" },
+    { title: "Python Full Course", channel: "freeCodeCamp", duration: "12h", level: "Beginner", thumbnail: "https://img.youtube.com/vi/rfscVS0vtbw/mqdefault.jpg", url: "https://www.youtube.com/watch?v=rfscVS0vtbw", topic: "Python", views: "35M" },
+    { title: "Operating Systems", channel: "Neso Academy", duration: "20+ hrs", level: "Intermediate", thumbnail: "https://img.youtube.com/vi/vBURTt97EkA/mqdefault.jpg", url: "https://www.youtube.com/watch?v=vBURTt97EkA", topic: "OS", views: "6.7M" },
+    { title: "DBMS Full Course", channel: "Gate Smashers", duration: "15+ hrs", level: "Intermediate", thumbnail: "https://img.youtube.com/vi/kBdlM6hNDAE/mqdefault.jpg", url: "https://www.youtube.com/watch?v=kBdlM6hNDAE", topic: "DBMS", views: "4.2M" },
+    { title: "Computer Networks", channel: "Neso Academy", duration: "20+ hrs", level: "Intermediate", thumbnail: "https://img.youtube.com/vi/VwN91x5i25g/mqdefault.jpg", url: "https://www.youtube.com/watch?v=VwN91x5i25g", topic: "Networks", views: "5.8M" },
+    { title: "Web Dev Full Course", channel: "Traversy Media", duration: "20+ hrs", level: "Beginner→Inter", thumbnail: "https://img.youtube.com/vi/ysEN5RaKOlA/mqdefault.jpg", url: "https://www.youtube.com/watch?v=ysEN5RaKOlA", topic: "Web Dev", views: "7.3M" },
+  ],
+};
+
+const SUBJ_META = {
+  Mathematics: { color: C.danger, bg: C.dangerLight, icon: "📐" },
+  Physics: { color: C.warning, bg: C.warningLight, icon: "⚛️" },
+  Chemistry: { color: C.success, bg: C.successLight, icon: "🧪" },
+  English: { color: C.primary, bg: C.primaryLight, icon: "📖" },
+  "Computer Science": { color: C.accent, bg: C.accentLight, icon: "💻" },
+};
+
+// ─── YouTube Playlists Page ────────────────────────────────
+const YouTubePage = ({ weakSubjects = [] }) => {
+  const allSubjects = Object.keys(YOUTUBE_PLAYLISTS);
+  const [active, setActive] = useState(weakSubjects[0] || allSubjects[0]);
+  const [saved, setSaved] = useState({});
+
+  const toggleSave = (id) => setSaved(p => ({ ...p, [id]: !p[id] }));
+  const playlists = YOUTUBE_PLAYLISTS[active] || [];
+  const meta = SUBJ_META[active] || { color: C.primary, bg: C.primaryLight, icon: "📚" };
+
+  return (
+    <div style={{ padding: "28px 32px", animation: "fadeIn 0.4s ease" }}>
+      <style>{GS}</style>
+      {/* Header */}
+      <div style={{ background: `linear-gradient(135deg, ${C.dark}, #1E3A5F)`, borderRadius: 20, padding: "24px 28px", marginBottom: 24, color: "#fff", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <div style={{ fontSize: 12, opacity: 0.6, letterSpacing: 1, marginBottom: 6, fontWeight: 600 }}>YOUTUBE STUDY PLAYLISTS</div>
+          <h2 style={{ fontFamily: "'Sora',sans-serif", fontWeight: 800, fontSize: 22 }}>📺 Curated Video Resources</h2>
+          <p style={{ opacity: 0.7, fontSize: 13, marginTop: 4 }}>Hand-picked playlists from top educators — click any card to open on YouTube</p>
+        </div>
+        {weakSubjects.length > 0 && (
+          <div style={{ background: "rgba(239,68,68,0.2)", border: "1px solid rgba(239,68,68,0.4)", borderRadius: 12, padding: "10px 16px" }}>
+            <div style={{ fontSize: 11, opacity: 0.7, marginBottom: 4 }}>⚠️ Your Weak Subjects</div>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {weakSubjects.map(s => <span key={s} style={{ background: C.danger, color: "#fff", padding: "2px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600 }}>{s}</span>)}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Subject Tabs */}
+      <div style={{ display: "flex", gap: 10, marginBottom: 24, flexWrap: "wrap" }}>
+        {allSubjects.map(s => {
+          const m = SUBJ_META[s];
+          const isWeak = weakSubjects.includes(s);
+          return (
+            <button key={s} onClick={() => setActive(s)} style={{
+              padding: "9px 18px", borderRadius: 20, fontSize: 13, fontWeight: 600,
+              background: active === s ? m.color : C.white,
+              color: active === s ? "#fff" : m.color,
+              border: `2px solid ${active === s ? m.color : m.color + "44"}`,
+              cursor: "pointer", fontFamily: "'DM Sans',sans-serif", transition: "all 0.2s",
+              display: "flex", alignItems: "center", gap: 6,
+            }}>
+              {m.icon} {s} {isWeak && <span style={{ background: active === s ? "rgba(255,255,255,0.3)" : C.danger, color: "#fff", fontSize: 10, padding: "1px 6px", borderRadius: 20 }}>WEAK</span>}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Playlist Cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 18 }}>
+        {playlists.map((p, i) => (
+          <div key={i} style={{
+            background: C.white, borderRadius: 16, border: `1px solid ${C.border}`,
+            overflow: "hidden", transition: "all 0.25s", cursor: "pointer",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+          }}
+            onMouseEnter={e => { e.currentTarget.style.boxShadow = `0 8px 30px ${meta.color}22`; e.currentTarget.style.transform = "translateY(-3px)"; }}
+            onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.04)"; e.currentTarget.style.transform = "none"; }}
+          >
+            {/* Thumbnail */}
+            <div style={{ position: "relative" }} onClick={() => window.open(p.url, '_blank')}>
+              <img src={p.thumbnail} alt={p.title}
+                style={{ width: "100%", height: 160, objectFit: "cover", display: "block" }}
+                onError={e => { e.target.style.display = "none"; e.target.parentElement.style.background = meta.bg; e.target.parentElement.style.height = "160px"; e.target.parentElement.style.display = "flex"; e.target.parentElement.style.alignItems = "center"; e.target.parentElement.style.justifyContent = "center"; e.target.parentElement.innerHTML = `<span style="font-size:48px">${meta.icon}</span>`; }}
+              />
+              {/* Play Overlay */}
+              <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.3)", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0, transition: "opacity 0.2s" }}
+                onMouseEnter={e => e.currentTarget.style.opacity = 1}
+                onMouseLeave={e => e.currentTarget.style.opacity = 0}>
+                <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#FF0000", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <span style={{ color: "#fff", fontSize: 22, marginLeft: 4 }}>▶</span>
+                </div>
+              </div>
+              {/* Topic badge */}
+              <div style={{ position: "absolute", top: 10, left: 10, background: meta.color, color: "#fff", padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700 }}>{p.topic}</div>
+              {/* Views */}
+              <div style={{ position: "absolute", bottom: 10, right: 10, background: "rgba(0,0,0,0.7)", color: "#fff", padding: "3px 8px", borderRadius: 6, fontSize: 11 }}>👁 {p.views}</div>
+            </div>
+
+            {/* Info */}
+            <div style={{ padding: "14px 16px" }}>
+              <div style={{ fontFamily: "'Sora',sans-serif", fontWeight: 700, fontSize: 14, marginBottom: 4, color: C.dark, lineHeight: 1.4 }}>{p.title}</div>
+              <div style={{ fontSize: 12, color: C.gray, marginBottom: 10 }}>
+                <span style={{ fontWeight: 600, color: "#FF0000" }}>▶ {p.channel}</span> · {p.duration}
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ background: meta.bg, color: meta.color, padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600 }}>{p.level}</span>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={() => toggleSave(`${active}-${i}`)} style={{ background: saved[`${active}-${i}`] ? C.warningLight : C.grayLight, border: "none", borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 14 }}>
+                    {saved[`${active}-${i}`] ? "⭐" : "☆"}
+                  </button>
+                  <button onClick={() => window.open(p.url, '_blank')} style={{ background: "#FF0000", color: "#fff", border: "none", borderRadius: 8, padding: "6px 14px", cursor: "pointer", fontSize: 12, fontWeight: 700, fontFamily: "'DM Sans',sans-serif" }}>
+                    Watch →
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ─── Semester History Page ─────────────────────────────────
+const SemesterPage = () => {
+  const [semesters, setSemesters] = useState([]);
+  const [analysis, setAnalysis] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [form, setForm] = useState({ semester_no: 1, semester_name: "Semester 1", math_marks: 0, physics_marks: 0, chemistry_marks: 0, english_marks: 0, cs_marks: 0, cgpa: 0, attendance: 75, backlogs: 0 });
+
+  const load = () => {
+    Promise.all([
+      api.get("/semesters"),
+      api.get("/semester-analysis")
+    ]).then(([s, a]) => {
+      setSemesters(s.semesters || []);
+      setAnalysis(a.analysis);
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const setF = (k, v) => setForm(p => ({ ...p, [k]: v }));
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await api.post("/semesters", { ...form, semester_no: parseInt(form.semester_no), cgpa: parseFloat(form.cgpa), attendance: parseFloat(form.attendance), backlogs: parseInt(form.backlogs), math_marks: parseFloat(form.math_marks), physics_marks: parseFloat(form.physics_marks), chemistry_marks: parseFloat(form.chemistry_marks), english_marks: parseFloat(form.english_marks), cs_marks: parseFloat(form.cs_marks) });
+      setMsg("✅ Semester saved!"); setShowForm(false); load();
+    } catch (e) { setMsg("❌ " + e.message); }
+    setSaving(false);
+    setTimeout(() => setMsg(""), 3000);
+  };
+
+  const subjects = ["math_marks", "physics_marks", "chemistry_marks", "english_marks", "cs_marks"];
+  const subjectNames = ["Mathematics", "Physics", "Chemistry", "English", "Computer Science"];
+
+  return (
+    <div style={{ padding: "28px 32px", animation: "fadeIn 0.4s ease" }}>
+      <style>{GS}</style>
+
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+        <div>
+          <h2 style={{ fontFamily: "'Sora',sans-serif", fontWeight: 800, fontSize: 22, color: C.dark }}>📅 Semester History & Analysis</h2>
+          <p style={{ color: C.gray, fontSize: 13, marginTop: 4 }}>Track your performance across all semesters and see AI-powered trend insights</p>
+        </div>
+        <Btn onClick={() => setShowForm(!showForm)} icon="➕">Add Semester</Btn>
+      </div>
+
+      {msg && <div style={{ marginBottom: 16 }}><Alert type={msg.startsWith("✅") ? "success" : "error"}>{msg}</Alert></div>}
+
+      {/* Add Form */}
+      {showForm && (
+        <Card className="fade-in" style={{ marginBottom: 24, border: `2px solid ${C.primary}33` }}>
+          <h3 style={{ fontFamily: "'Sora',sans-serif", fontWeight: 700, fontSize: 15, marginBottom: 18 }}>➕ Add Semester Result</h3>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 14 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <label style={{ fontSize: 13, fontWeight: 600 }}>Semester Number</label>
+              <select value={form.semester_no} onChange={e => { setF("semester_no", e.target.value); setF("semester_name", `Semester ${e.target.value}`); }}
+                style={{ padding: "11px 14px", border: `1.5px solid ${C.border}`, borderRadius: 10, fontSize: 14, fontFamily: "'DM Sans',sans-serif", background: "#FAFBFF" }}>
+                {[1,2].map(n => <option key={n} value={n}>Semester {n}</option>)}
+              </select>
+            </div>
+            <Input label="CGPA" type="number" value={form.cgpa} onChange={e => setF("cgpa", e.target.value)} icon="🎓" min={0} max={10} step={0.1} />
+            <Input label="Attendance (%)" type="number" value={form.attendance} onChange={e => setF("attendance", e.target.value)} icon="📅" min={0} max={100} />
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 12, marginBottom: 14 }}>
+            {[["Mathematics","📐","math_marks"],["Physics","⚛️","physics_marks"],["Chemistry","🧪","chemistry_marks"],["English","📖","english_marks"],["Computer Sci","💻","cs_marks"]].map(([label,icon,key]) => (
+              <Input key={key} label={label} type="number" value={form[key]} onChange={e => setF(key, e.target.value)} icon={icon} min={0} max={100} />
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 10 }}>
+            <Btn onClick={save} disabled={saving}>{saving ? "Saving..." : "💾 Save Semester"}</Btn>
+            <Btn variant="secondary" onClick={() => setShowForm(false)}>Cancel</Btn>
+          </div>
+        </Card>
+      )}
+
+      {loading ? <div style={{ display: "flex", justifyContent: "center", padding: 60 }}><Spinner size={40} /></div> : (
+        <>
+          {/* Trend Analysis */}
+          {analysis && (
+            <>
+              {/* Insights */}
+              {analysis.insights.length > 0 && (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(300px,1fr))", gap: 12, marginBottom: 24 }}>
+                  {analysis.insights.map((ins, i) => (
+                    <div key={i} style={{ padding: "14px 16px", borderRadius: 12, background: ins.type === "success" ? C.successLight : ins.type === "warning" ? C.warningLight : C.primaryLight, border: `1px solid ${ins.type === "success" ? C.success : ins.type === "warning" ? C.warning : C.primary}33`, display: "flex", gap: 12, alignItems: "flex-start" }}>
+                      <span style={{ fontSize: 22, flexShrink: 0 }}>{ins.icon}</span>
+                      <div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: ins.type === "success" ? C.success : ins.type === "warning" ? "#B45309" : C.primary, marginBottom: 4 }}>{ins.subject.toUpperCase()}</div>
+                        <div style={{ fontSize: 13, color: C.dark, lineHeight: 1.5 }}>{ins.message}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* CGPA Trend */}
+              {analysis.cgpa_trend.length > 0 && (
+                <Card style={{ marginBottom: 24 }}>
+                  <h3 style={{ fontFamily: "'Sora',sans-serif", fontWeight: 700, fontSize: 15, marginBottom: 20 }}>📈 CGPA Progression</h3>
+                  <div style={{ display: "flex", alignItems: "flex-end", gap: 12, height: 140 }}>
+                    {analysis.cgpa_trend.map((cgpa, i) => {
+                      const color = cgpa >= 8 ? C.success : cgpa >= 6 ? C.primary : cgpa >= 5 ? C.warning : C.danger;
+                      return (
+                        <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color }}>{cgpa}</div>
+                          <div style={{ width: "100%", height: `${(cgpa / 10) * 100}px`, background: color, borderRadius: "6px 6px 0 0", transition: "height 0.8s", minHeight: 20 }} />
+                          <div style={{ fontSize: 12, color: C.gray }}>Sem {i + 1}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div style={{ display: "flex", gap: 16, marginTop: 16, flexWrap: "wrap" }}>
+                    {analysis.most_improved && <Badge bg={C.successLight} color={C.success}>📈 Most Improved: {analysis.most_improved}</Badge>}
+                    {analysis.most_declined && <Badge bg={C.dangerLight} color={C.danger}>📉 Declining: {analysis.most_declined}</Badge>}
+                    {analysis.consistently_weak.length > 0 && <Badge bg={C.warningLight} color="#B45309">⚠️ Needs Focus: {analysis.consistently_weak.join(", ")}</Badge>}
+                  </div>
+                </Card>
+              )}
+
+              {/* Subject Trends */}
+              {Object.keys(analysis.subject_trends).length > 0 && (
+                <Card style={{ marginBottom: 24 }}>
+                  <h3 style={{ fontFamily: "'Sora',sans-serif", fontWeight: 700, fontSize: 15, marginBottom: 20 }}>📊 Subject-wise Trends</h3>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                    {Object.entries(analysis.subject_trends).map(([subj, data]) => {
+                      const m = SUBJ_META[subj] || { color: C.primary, bg: C.primaryLight, icon: "📚" };
+                      return (
+                        <div key={subj} style={{ padding: "14px 16px", borderRadius: 12, background: C.grayLight }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <span style={{ fontSize: 18 }}>{m.icon}</span>
+                              <span style={{ fontWeight: 600, fontSize: 14 }}>{subj}</span>
+                            </div>
+                            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                              <span style={{ fontSize: 13, fontWeight: 700, color: m.color }}>Avg: {data.average}%</span>
+                              <Badge bg={data.direction === "improving" ? C.successLight : data.direction === "declining" ? C.dangerLight : C.warningLight}
+                                color={data.direction === "improving" ? C.success : data.direction === "declining" ? C.danger : "#B45309"}>
+                                {data.direction === "improving" ? "📈 +" : data.direction === "declining" ? "📉 " : "➡️ "}{Math.abs(data.trend)}
+                              </Badge>
+                            </div>
+                          </div>
+                          <div style={{ display: "flex", gap: 8, alignItems: "flex-end", height: 50 }}>
+                            {data.marks.map((mark, idx) => (
+                              <div key={idx} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+                                <div style={{ width: "100%", height: `${(mark / 100) * 40}px`, background: m.color, borderRadius: "3px 3px 0 0", minHeight: 4 }} />
+                                <div style={{ fontSize: 10, color: C.gray }}>S{idx + 1}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </Card>
+              )}
+            </>
+          )}
+
+          {/* Semester Cards */}
+          {semesters.length === 0 ? (
+            <Card style={{ textAlign: "center", padding: 60 }}>
+              <div style={{ fontSize: 56, marginBottom: 14 }}>📅</div>
+              <h3 style={{ fontFamily: "'Sora',sans-serif", fontWeight: 700, fontSize: 18, marginBottom: 8 }}>No Semester Data Yet</h3>
+              <p style={{ color: C.gray, marginBottom: 20 }}>Add your past semester results to see trend analysis and AI insights.</p>
+              <Btn onClick={() => setShowForm(true)} icon="➕">Add First Semester</Btn>
+            </Card>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 16 }}>
+              {semesters.map(sem => {
+                const avg = ((sem.math_marks + sem.physics_marks + sem.chemistry_marks + sem.english_marks + sem.cs_marks) / 5).toFixed(1);
+                const cgpaColor = sem.cgpa >= 8 ? C.success : sem.cgpa >= 6 ? C.primary : sem.cgpa >= 5 ? C.warning : C.danger;
+                return (
+                  <Card key={sem.id}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+                      <div>
+                        <div style={{ fontFamily: "'Sora',sans-serif", fontWeight: 700, fontSize: 16 }}>{sem.semester_name || `Semester ${sem.semester_no}`}</div>
+                        <div style={{ fontSize: 12, color: C.gray, marginTop: 2 }}>Avg: {avg}% · Attendance: {sem.attendance}%</div>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <div style={{ fontFamily: "'Sora',sans-serif", fontWeight: 800, fontSize: 26, color: cgpaColor }}>{sem.cgpa}</div>
+                        <div style={{ fontSize: 10, color: C.gray }}>CGPA</div>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {[["📐 Math", sem.math_marks],["⚛️ Physics", sem.physics_marks],["🧪 Chem", sem.chemistry_marks],["📖 English", sem.english_marks],["💻 CS", sem.cs_marks]].map(([label, val]) => (
+                        <div key={label} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <div style={{ width: 80, fontSize: 12, color: C.gray }}>{label}</div>
+                          <div style={{ flex: 1, background: C.grayLight, borderRadius: 999, height: 6, overflow: "hidden" }}>
+                            <div style={{ width: `${val}%`, height: "100%", background: val >= 75 ? C.success : val >= 60 ? C.warning : C.danger, borderRadius: 999 }} />
+                          </div>
+                          <div style={{ width: 30, fontSize: 12, fontWeight: 700, textAlign: "right", color: val >= 75 ? C.success : val >= 60 ? C.warning : C.danger }}>{val}</div>
+                        </div>
+                      ))}
+                    </div>
+                    {sem.backlogs > 0 && <div style={{ marginTop: 12 }}><Badge bg={C.dangerLight} color={C.danger} sm>⚠️ {sem.backlogs} Backlog(s)</Badge></div>}
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+};
+
+// ─── Study Schedule Page ───────────────────────────────────
+const StudySchedulePage = () => {
+  const [schedule, setSchedule] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [weakSubjects, setWeakSubjects] = useState([]);
+  const [hours, setHours] = useState(4);
+  const allSubjects = ["Mathematics", "Physics", "Chemistry", "English", "Computer Science"];
+
+  const toggleSubject = (s) => setWeakSubjects(p => p.includes(s) ? p.filter(x => x !== s) : [...p, s]);
+
+  const generate = async () => {
+    setLoading(true);
+    try {
+      const res = await api.post("/study-schedule", { weak_subjects: weakSubjects, daily_hours: hours });
+      setSchedule(res.schedule);
+    } catch (e) { console.error(e); }
+    setLoading(false);
+  };
+
+  const dayColors = { Monday: C.primary, Tuesday: C.accent, Wednesday: C.success, Thursday: C.warning, Friday: C.danger, Saturday: "#EC4899", Sunday: C.gray };
+
+  return (
+    <div style={{ padding: "28px 32px", animation: "fadeIn 0.4s ease" }}>
+      <style>{GS}</style>
+
+      <Card style={{ marginBottom: 24, background: `linear-gradient(135deg, ${C.primaryLight}, ${C.accentLight})` }}>
+        <h3 style={{ fontFamily: "'Sora',sans-serif", fontWeight: 700, fontSize: 16, marginBottom: 6 }}>📅 AI Study Schedule Generator</h3>
+        <p style={{ fontSize: 13, color: C.gray, marginBottom: 20 }}>Select your weak subjects and daily study hours to generate a personalized weekly plan.</p>
+
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10 }}>Select Weak Subjects:</div>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {allSubjects.map(s => {
+              const m = SUBJ_META[s];
+              const sel = weakSubjects.includes(s);
+              return (
+                <button key={s} onClick={() => toggleSubject(s)} style={{ padding: "8px 16px", borderRadius: 20, fontSize: 13, fontWeight: 600, background: sel ? m.color : C.white, color: sel ? "#fff" : m.color, border: `2px solid ${m.color}`, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", transition: "all 0.2s" }}>
+                  {m.icon} {s}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
+          <div style={{ fontSize: 13, fontWeight: 600 }}>Daily Study Hours:</div>
+          {[2, 3, 4, 5, 6, 8].map(h => (
+            <button key={h} onClick={() => setHours(h)} style={{ width: 44, height: 44, borderRadius: "50%", background: hours === h ? C.primary : C.white, color: hours === h ? "#fff" : C.dark, border: `2px solid ${hours === h ? C.primary : C.border}`, cursor: "pointer", fontWeight: 700, fontSize: 14, fontFamily: "'DM Sans',sans-serif" }}>{h}h</button>
+          ))}
+        </div>
+
+        <Btn onClick={generate} disabled={loading} icon="🤖">{loading ? "Generating..." : "Generate My Study Schedule"}</Btn>
+      </Card>
+
+      {loading && (
+        <Card style={{ textAlign: "center", padding: 48 }}>
+          <Spinner size={48} />
+          <div style={{ marginTop: 14, fontFamily: "'Sora',sans-serif", fontWeight: 600 }}>Creating your personalized schedule...</div>
+        </Card>
+      )}
+
+      {schedule && !loading && (
+        <div className="fade-in">
+          <div style={{ fontFamily: "'Sora',sans-serif", fontWeight: 700, fontSize: 16, marginBottom: 16, color: C.dark }}>📋 Your Weekly Study Plan</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))", gap: 16 }}>
+            {schedule.map((day, i) => {
+              const color = dayColors[day.day] || C.primary;
+              return (
+                <Card key={i} style={{ padding: 0, overflow: "hidden" }}>
+                  <div style={{ background: color, padding: "12px 16px", color: "#fff" }}>
+                    <div style={{ fontFamily: "'Sora',sans-serif", fontWeight: 700, fontSize: 15 }}>{day.day}</div>
+                    <div style={{ fontSize: 12, opacity: 0.8, marginTop: 2 }}>Total: {day.total_hours}h study time</div>
+                  </div>
+                  <div style={{ padding: "14px 16px" }}>
+                    {day.sessions.map((s, j) => {
+                      const m = SUBJ_META[s.subject] || { icon: "📚", color: C.gray, bg: C.grayLight };
+                      return (
+                        <div key={j} style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "10px 0", borderBottom: j < day.sessions.length - 1 ? `1px solid ${C.border}` : "none" }}>
+                          <div style={{ width: 36, height: 36, borderRadius: 10, background: m.bg || C.grayLight, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>{m.icon}</div>
+                          <div>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: C.dark }}>{s.subject}</div>
+                            <div style={{ fontSize: 12, color: C.gray, marginTop: 2 }}>{s.activity}</div>
+                            <div style={{ fontSize: 11, fontWeight: 700, color: m.color || C.primary, marginTop: 4 }}>⏱ {s.hours}h</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── Page Title Map ────────────────────────────────────────
 const PAGE_TITLES = {
   "dashboard": ["Student Dashboard", "AI prediction & performance overview"],
   "data-entry": ["Academic Data Entry", "Input your data to run ML prediction"],
   "resources": ["Study Resources", "Curated materials for your improvement"],
   "history": ["Prediction History", "All your past AI predictions"],
+  "semesters": ["Semester History", "Track performance across all semesters"],
+  "youtube": ["YouTube Playlists", "Curated video resources for every subject"],
+  "schedule": ["Study Schedule", "AI-generated personalized weekly study plan"],
   "admin-overview": ["Admin Overview", "Real-time student performance intelligence"],
   "students": ["Student Management", "All enrolled students"],
   "upload": ["Bulk Upload", "Import CSV/Excel to run batch predictions"],
@@ -1053,6 +1553,13 @@ export default function App() {
     }
   }, []);
 
+  // Listen for dashboard quick card navigation
+  useEffect(() => {
+    const handler = (e) => setPage(e.detail);
+    window.addEventListener("edunav", handler);
+    return () => window.removeEventListener("edunav", handler);
+  }, []);
+
   if (screen === "landing") return <LandingPage onGoLogin={goLogin} />;
   if (screen === "login") return <AuthPage onAuth={handleAuth} hint={loginHint} />;
 
@@ -1063,6 +1570,9 @@ export default function App() {
       case "dashboard": return <StudentDashboard />;
       case "data-entry": return <DataEntryPage onSuccess={() => setPage("dashboard")} />;
       case "resources": return <ResourcesPage />;
+      case "semesters": return <SemesterPage />;
+      case "youtube": return <YouTubePage weakSubjects={[]} />;
+      case "schedule": return <StudySchedulePage />;
       case "history": return <HistoryPage />;
       case "admin-overview": return <AdminOverview />;
       case "students": return <StudentsPage />;

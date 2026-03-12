@@ -79,3 +79,31 @@ def row_to_dict(row):
 
 def rows_to_list(rows):
     return [dict(r) for r in rows]
+
+
+def init_semester_table():
+    """Add semester results table if not exists."""
+    conn = get_db()
+    conn.execute('''CREATE TABLE IF NOT EXISTS semester_results (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        semester_no INTEGER NOT NULL,
+        semester_name TEXT DEFAULT '',
+        math_marks REAL DEFAULT 0,
+        physics_marks REAL DEFAULT 0,
+        chemistry_marks REAL DEFAULT 0,
+        english_marks REAL DEFAULT 0,
+        cs_marks REAL DEFAULT 0,
+        other1_name TEXT DEFAULT '',
+        other1_marks REAL DEFAULT 0,
+        other2_name TEXT DEFAULT '',
+        other2_marks REAL DEFAULT 0,
+        cgpa REAL DEFAULT 0,
+        attendance REAL DEFAULT 0,
+        backlogs INTEGER DEFAULT 0,
+        created_at TEXT DEFAULT (datetime('now')),
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    )''')
+    conn.commit()
+    conn.close()
+
